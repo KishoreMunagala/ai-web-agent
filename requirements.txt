@@ -1,0 +1,8 @@
+playwright
+openai
+keyring
+spaCy
+Flask
+
+# For GUI
+# tkinter (usually included with Python) 

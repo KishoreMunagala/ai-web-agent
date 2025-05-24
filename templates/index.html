@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Web Automation Agent</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+        #chat { width: 100%; max-width: 700px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; padding: 24px; }
+        .bubble { padding: 10px 16px; border-radius: 18px; margin: 8px 0; max-width: 80%; display: inline-block; }
+        .user { background: #d1eaff; align-self: flex-end; float: right; }
+        .assistant { background: #e6e6e6; align-self: flex-start; float: left; }
+        #input-row { display: flex; gap: 8px; margin-top: 16px; }
+        #command { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #ccc; }
+        #submit, #speak { padding: 8px 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; cursor: pointer; }
+        #submit:hover, #speak:hover { background: #0056b3; }
+        #chat-area { min-height: 300px; margin-bottom: 8px; overflow-y: auto; }
+        .clearfix { clear: both; }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <h2>AI Web Automation Agent</h2>
+        <div id="chat-area"></div>
+        <div class="clearfix"></div>
+        <form id="cmdform" onsubmit="sendCommand(); return false;">
+            <div id="input-row">
+                <input type="text" id="command" name="command" placeholder="Type your command..." autocomplete="off" required>
+                <button id="submit" type="submit">Submit</button>
+                <button id="speak" type="button" onclick="startRecognition()">🎤 Speak</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        let lastLogCount = 0;
+        function addBubble(text, who) {
+            var chat = document.getElementById('chat-area');
+            var bubble = document.createElement('div');
+            bubble.className = 'bubble ' + who;
+            bubble.innerText = text;
+            chat.appendChild(bubble);
+            chat.appendChild(document.createElement('div')).className = 'clearfix';
+            chat.scrollTop = chat.scrollHeight;
+            if (who === 'assistant') speakTTS(text);
+        }
+        function sendCommand() {
+            var cmd = document.getElementById('command').value;
+            addBubble(cmd, 'user');
+            fetch('/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'command=' + encodeURIComponent(cmd)
+            });
+            document.getElementById('command').value = '';
+        }
+        function pollLogs() {
+            fetch('/logs').then(r => r.json()).then(data => {
+                if (data.logs.length > lastLogCount) {
+                    var newLogs = data.logs.slice(lastLogCount);
+                    newLogs.forEach(function(line) {
+                        // Only show assistant bubbles for natural language responses
+                        if (line.startsWith('[Assistant]')) {
+                            addBubble(line.replace('[Assistant] ', ''), 'assistant');
+                        }
+                    });
+                    lastLogCount = data.logs.length;
+                }
+            });
+        }
+        setInterval(pollLogs, 1000);
+
+        // Voice recognition
+        function startRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Your browser does not support Speech Recognition. Try Chrome.');
+                return;
+            }
+            var recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript;
+                document.getElementById('command').value = transcript;
+            };
+            recognition.onerror = function(event) {
+                alert('Speech recognition error: ' + event.error);
+            };
+            recognition.start();
+        }
+        // TTS for assistant
+        function speakTTS(text) {
+            if ('speechSynthesis' in window) {
+                var utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'en-US';
+                window.speechSynthesis.speak(utter);
+            }
+        }
+    </script>
+</body>
+</html> 
