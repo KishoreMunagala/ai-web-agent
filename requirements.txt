@@ -3,6 +3,7 @@ openai
 keyring
 spaCy
 Flask
+gunicorn
 
 # For GUI
 # tkinter (usually included with Python) 
