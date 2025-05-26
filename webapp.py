@@ -29,12 +29,16 @@ def run():
         session['history'] = []
     session['history'].append({'role': 'user', 'content': command})
     session.modified = True
+    log("[Debug] Running automation subprocess...")
     # Call run_automation.py as a subprocess, passing history as JSON
     history_json = json.dumps(session['history'])
     result = subprocess.run(
         ['python', 'run_automation.py', command, history_json],
         capture_output=True, text=True
     )
+    log(f"[Debug] Subprocess finished with return code: {result.returncode}")
+    log(f"[Debug] STDOUT: {result.stdout}")
+    log(f"[Debug] STDERR: {result.stderr}")
     if result.stdout:
         for line in result.stdout.splitlines():
             log(line)
