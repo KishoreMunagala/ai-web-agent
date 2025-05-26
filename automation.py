@@ -22,6 +22,9 @@ playwright = sync_playwright().start()
 chrome_path = get_chrome_path()
 browser = playwright.chromium.launch(headless=False, executable_path=chrome_path)
 
+# Keep track of the last YouTube page
+last_youtube_page = None
+
 def execute_plan(plan: dict):
     site = plan.get("site", "Unknown").lower()
     action = plan.get("action", "Unknown").lower()
@@ -31,13 +34,19 @@ def execute_plan(plan: dict):
     if site == "youtube":
         if action == "play":
             youtube_search_and_play(item)
+        elif action == "next":
+            youtube_next()
+        elif action == "previous":
+            youtube_previous()
         else:
             print(f"[Automation] Action '{action}' not supported for YouTube.")
     else:
         print(f"[Automation] Site '{site}' not supported yet.")
 
 def youtube_search_and_play(video_title):
+    global last_youtube_page
     page = browser.new_page()
+    last_youtube_page = page
     print("[Automation] Navigating to YouTube...")
     page.goto("https://www.youtube.com")
     try:
@@ -84,4 +93,26 @@ def youtube_search_and_play(video_title):
         print(f"[Automation] Error handling YouTube results: {e}")
         page.screenshot(path='youtube_error.png')
         print("[Automation] Screenshot saved as youtube_error.png")
-    print("[Automation] Browser will remain open. Please close it manually when done.") 
+    print("[Automation] Browser will remain open. Please close it manually when done.")
+
+def youtube_next():
+    global last_youtube_page
+    if last_youtube_page:
+        try:
+            last_youtube_page.keyboard.press('Shift+N')
+            print("[Automation] Pressed Next (Shift+N) on YouTube.")
+        except Exception as e:
+            print(f"[Automation] Error pressing Next: {e}")
+    else:
+        print("[Automation] No YouTube page available for Next action.")
+
+def youtube_previous():
+    global last_youtube_page
+    if last_youtube_page:
+        try:
+            last_youtube_page.keyboard.press('Shift+P')
+            print("[Automation] Pressed Previous (Shift+P) on YouTube.")
+        except Exception as e:
+            print(f"[Automation] Error pressing Previous: {e}")
+    else:
+        print("[Automation] No YouTube page available for Previous action.") 

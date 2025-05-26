@@ -5,7 +5,7 @@ nlp = spacy.load("en_core_web_sm")
 
 # Supported sites and actions for demo
 SITES = ["amazon", "netflix", "youtube"]
-ACTIONS = ["search", "add to cart", "play"]
+ACTIONS = ["search", "add to cart", "play", "next", "previous"]
 
 
 def parse_command(command: str) -> dict:
@@ -30,6 +30,12 @@ def parse_command(command: str) -> dict:
         if a in command.lower():
             action = a
             break
+    # Special handling for YouTube next/previous
+    if not action and site == "YouTube":
+        if any(kw in command.lower() for kw in ["next song", "next video", "skip", "next"]):
+            action = "next"
+        elif any(kw in command.lower() for kw in ["previous song", "previous video", "go back", "previous"]):
+            action = "previous"
     if not action:
         if site == "Amazon":
             if "add" in command and "cart" in command:
