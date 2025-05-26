@@ -2,6 +2,7 @@ import sys
 import json
 from nlu import parse_command
 from automation import execute_plan
+from automation import IS_CLOUD
 
 def get_assistant_response(plan, history):
     # Example: Use last user message for context-aware reply
@@ -22,6 +23,9 @@ if __name__ == "__main__":
     print(f"[NLU] {plan}")
     print(f"[History] {history}")
     try:
+        if IS_CLOUD:
+            print("[Assistant] Browser automation is not supported in this environment. Please run locally for full functionality.")
+            sys.exit(0)
         response = get_assistant_response(plan, history)
         print(f"[Assistant] {response}")
         execute_plan(plan)

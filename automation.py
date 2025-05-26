@@ -3,6 +3,9 @@ import shutil
 import os
 import time
 
+# Detect if running in a cloud/headless environment
+IS_CLOUD = os.environ.get("RENDER") or not os.environ.get("DISPLAY")
+
 def get_chrome_path():
     possible_paths = [
         os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
@@ -18,14 +21,22 @@ def get_chrome_path():
     raise FileNotFoundError("Google Chrome executable not found on this system.")
 
 # Initialize Playwright and browser globally
-playwright = sync_playwright().start()
-chrome_path = get_chrome_path()
-browser = playwright.chromium.launch(headless=False, executable_path=chrome_path)
+if not IS_CLOUD:
+    playwright = sync_playwright().start()
+    chrome_path = get_chrome_path()
+    browser = playwright.chromium.launch(headless=False, executable_path=chrome_path)
+else:
+    playwright = None
+    chrome_path = None
+    browser = None
 
 # Keep track of the last YouTube page
 last_youtube_page = None
 
 def execute_plan(plan: dict):
+    if IS_CLOUD:
+        print("[Automation] Browser automation is not supported in this environment. Please run locally for full functionality.")
+        return
     site = plan.get("site", "Unknown").lower()
     action = plan.get("action", "Unknown").lower()
     item = plan.get("item", "")
