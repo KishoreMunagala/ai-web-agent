@@ -25,6 +25,9 @@ if __name__ == "__main__":
     try:
         if IS_CLOUD:
             print("[Assistant] Browser automation is not supported in this environment. Please run locally for full functionality.")
+            sys.stdout.flush()
+            import time
+            time.sleep(0.1)
             sys.exit(0)
         response = get_assistant_response(plan, history)
         print(f"[Assistant] {response}")
