@@ -34,8 +34,10 @@ def parse_command(command: str) -> dict:
     if not action and site == "YouTube":
         if any(kw in command.lower() for kw in ["next song", "next video", "skip", "next"]):
             action = "next"
+            item = ""
         elif any(kw in command.lower() for kw in ["previous song", "previous video", "go back", "previous"]):
             action = "previous"
+            item = ""
     if not action:
         if site == "Amazon":
             if "add" in command and "cart" in command:

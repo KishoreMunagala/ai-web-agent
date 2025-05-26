@@ -2,9 +2,10 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 import shutil
 import os
 import time
+import sys
 
 # Detect if running in a cloud/headless environment
-IS_CLOUD = os.environ.get("RENDER") or not os.environ.get("DISPLAY")
+IS_CLOUD = bool(os.environ.get("RENDER")) or (sys.platform != "win32" and not os.environ.get("DISPLAY"))
 
 def get_chrome_path():
     possible_paths = [
@@ -56,10 +57,15 @@ def execute_plan(plan: dict):
 
 def youtube_search_and_play(video_title):
     global last_youtube_page
-    page = browser.new_page()
-    last_youtube_page = page
+    if last_youtube_page and not last_youtube_page.is_closed():
+        page = last_youtube_page
+        page.bring_to_front()
+        page.goto("https://www.youtube.com")
+    else:
+        page = browser.new_page()
+        last_youtube_page = page
+        page.goto("https://www.youtube.com")
     print("[Automation] Navigating to YouTube...")
-    page.goto("https://www.youtube.com")
     try:
         consent_selectors = [
             'button:has-text("Accept all")',
